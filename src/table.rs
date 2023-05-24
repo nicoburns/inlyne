@@ -7,7 +7,9 @@ use std::sync::{Arc, Mutex};
 
 use glyphon::FontSystem;
 use taffy::{
-    prelude::{auto, length, Display, Layout, Size as TaffySize, Style, Taffy},
+    prelude::{
+        auto, length, Dimension, Display, JustifyContent, Layout, Size as TaffySize, Style, Taffy,
+    },
     style::AvailableSpace,
     tree::MeasureFunc,
 };
@@ -150,12 +152,19 @@ impl Table {
         });
 
         // Setup the grid
+
         let root_style = Style {
-            display: Display::Grid,
+            display: Display::Flex,
             size: TaffySize {
-                width: auto(),
-                height: auto(),
+                width: Dimension::Length(bounds.0),
+                height: Dimension::Auto,
             },
+            justify_content: Some(JustifyContent::Start),
+            ..default()
+        };
+
+        let grid_style = Style {
+            display: Display::Grid,
             gap: TaffySize {
                 width: length(TABLE_COL_GAP),
                 height: length(TABLE_ROW_GAP),
@@ -205,7 +214,8 @@ impl Table {
             flattened_nodes.append(&mut row.clone());
         }
 
-        let root = taffy.new_with_children(root_style, &flattened_nodes)?;
+        let grid = taffy.new_with_children(grid_style, &flattened_nodes)?;
+        let root = taffy.new_with_children(root_style, &[grid])?;
 
         taffy
             .compute_layout(
